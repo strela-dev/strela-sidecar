@@ -9,3 +9,4 @@ edition = "2021"
 craftping = "0.4.1"
 hostname = { version = "0.3.1", features = [] }
 time = "0.3.31"
+signal-hook = { version = "0.3.17", features = [] }

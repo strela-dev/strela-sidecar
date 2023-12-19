@@ -2,15 +2,35 @@ use std::env;
 use std::net::TcpStream;
 use craftping::sync::ping;
 use std::process::Command;
+use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::thread;
 use std::time::Duration;
+use signal_hook::consts::{SIGINT, SIGTERM};
+use signal_hook::iterator::Signals;
 
-fn main() {
-    loop {
+
+fn main() -> Result<(), std::io::Error> {
+    let running = Arc::new(AtomicBool::new(true));
+    let r = running.clone();
+
+    let mut signals = Signals::new(&[SIGTERM, SIGINT])?;
+    thread::spawn(move || {
+        for _ in signals.forever() {
+            r.store(false, Ordering::SeqCst);
+        }
+    });
+
+
+    while running.load(Ordering::SeqCst) {
         thread::sleep(Duration::from_secs(1));
         execute_ping();
     }
+
+    println!("Shutting down gracefully...");
+    Ok(())
 }
+
 
 fn execute_ping() {
     let hostname = "localhost";
