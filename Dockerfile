@@ -12,5 +12,12 @@ FROM alpine
 # copy the build artifact from the build stage
 COPY --from=build /usr/local/cargo/bin/strela-sidecar ./strela-sidecar
 
+RUN apk add --no-cache curl
+
+# Download kubectl and make it executable
+RUN curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl" \
+    && chmod +x ./kubectl \
+    && mv ./kubectl /usr/local/bin/kubectl
+
 # set the startup command to run your binary
 CMD ["./strela-sidecar"]
