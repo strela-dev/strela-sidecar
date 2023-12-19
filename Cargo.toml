@@ -1,0 +1,11 @@
+[package]
+name = "strela-sidecar"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+craftping = "0.4.1"
+hostname = { version = "0.3.1", features = [] }
+time = "0.3.31"
