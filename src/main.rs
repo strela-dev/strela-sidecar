@@ -3,12 +3,14 @@ use std::net::TcpStream;
 use craftping::sync::ping;
 use std::process::Command;
 use std::sync::Arc;
-use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::thread;
 use std::time::Duration;
 use signal_hook::consts::{SIGINT, SIGTERM};
 use signal_hook::iterator::Signals;
 
+
+static PLAYER_COUNT: AtomicUsize = AtomicUsize::new(0);
 
 fn main() -> Result<(), std::io::Error> {
     let running = Arc::new(AtomicBool::new(true));
@@ -54,6 +56,11 @@ fn ping_and_execute_command(mut stream: TcpStream, hostname: &str, port: u16) {
 
     // Get the number of online players
     let online_players = pong.online_players;
+
+    if (PLAYER_COUNT.load(Ordering::SeqCst) == online_players) {
+        return;
+    }
+    PLAYER_COUNT.store(online_players, Ordering::SeqCst);
 
     // Construct the kubectl patch command
     let patch_command = format!(
