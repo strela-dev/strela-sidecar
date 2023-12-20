@@ -19,5 +19,7 @@ RUN curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/s
     && chmod +x ./kubectl \
     && mv ./kubectl /usr/local/bin/kubectl
 
+ENV RUST_LOG=info
+
 # set the startup command to run your binary
 CMD ["./strela-sidecar"]

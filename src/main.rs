@@ -8,11 +8,14 @@ use std::thread;
 use std::time::Duration;
 use signal_hook::consts::{SIGINT, SIGTERM};
 use signal_hook::iterator::Signals;
+use log::{error, info};
 
 
 static PLAYER_COUNT: AtomicUsize = AtomicUsize::new(0);
 
 fn main() -> Result<(), std::io::Error> {
+    env_logger::init();
+
     let running = Arc::new(AtomicBool::new(true));
     let r = running.clone();
 
@@ -29,7 +32,7 @@ fn main() -> Result<(), std::io::Error> {
         execute_ping();
     }
 
-    println!("Shutting down gracefully...");
+    info!("Shutting down gracefully...");
     Ok(())
 }
 
@@ -43,7 +46,7 @@ fn execute_ping() {
             ping_and_execute_command(stream, hostname, port)
         }
         Err(e) => {
-            println!("Error: {}", e)
+            info!("{}", e)
         }
     }
 }
@@ -57,7 +60,8 @@ fn ping_and_execute_command(mut stream: TcpStream, hostname: &str, port: u16) {
     // Get the number of online players
     let online_players = pong.online_players;
 
-    if (PLAYER_COUNT.load(Ordering::SeqCst) == online_players) {
+    if PLAYER_COUNT.load(Ordering::SeqCst) == online_players {
+        info!("Player count is still {}", online_players);
         return;
     }
     PLAYER_COUNT.store(online_players, Ordering::SeqCst);
@@ -68,7 +72,7 @@ fn ping_and_execute_command(mut stream: TcpStream, hostname: &str, port: u16) {
         pod_name, online_players
     );
 
-    println!("test: {}", patch_command);
+    info!("command: {}", patch_command);
 
     // Execute the kubectl patch command
     let output = Command::new("sh")
@@ -79,10 +83,10 @@ fn ping_and_execute_command(mut stream: TcpStream, hostname: &str, port: u16) {
 
     // Check if the command was executed successfully
     if output.status.success() {
-        println!("Successfully patched the Minecraft server status.");
+        info!("Successfully patched the Minecraft server status.");
     } else {
         // Handle the error (if any)
         let stderr = String::from_utf8_lossy(&output.stderr);
-        eprintln!("Command failed with error:\n{}", stderr);
+        error!("Command failed with error:\n{}", stderr);
     }
 }
